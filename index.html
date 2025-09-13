@@ -364,4 +364,260 @@
                 <form id="contact-form">
                     <div class="form-group"><label for="name">Name</label><input type="text" id="contact-name" required></div>
                     <div class="form-group"><label for="email">Email</label><input type="email" id="contact-email" required></div>
-                    <div class="form-group"><label for
+                    <div class="form-group"><label for="message">Message</label><textarea id="contact-message" rows="5" required></textarea></div>
+                    <button type="submit" class="btn">Send Message</button>
+                </form>
+            `;
+        };
+
+        const createProductCard = (product) => `
+            <div class="product-card">
+                <img src="${product.imageUrl}" alt="${product.name}" data-id="${product.id}" class="product-image">
+                <div class="product-info">
+                    <h3>${product.name}</h3>
+                    <p class="price">$${product.price}</p>
+                    <div class="product-actions">
+                        <button class="btn-icon add-to-cart-btn" data-id="${product.id}"><i class="fas fa-cart-plus"></i></button>
+                    </div>
+                </div>
+            </div>`;
+
+        const createCartItem = (id, item) => `
+            <div class="list-item">
+                <img src="${item.imageUrl}" alt="${item.name}">
+                <div class="item-details">
+                    <h3>${item.name}</h3>
+                    <p class="price">$${item.price}</p>
+                </div>
+                <div class="item-actions">
+                    <div class="quantity-controls">
+                        <button class="quantity-change-btn" data-id="${id}" data-change="-1">-</button>
+                        <span>${item.quantity}</span>
+                        <button class="quantity-change-btn" data-id="${id}" data-change="1">+</button>
+                    </div>
+                    <button class="btn-icon remove-from-cart-btn" data-id="${id}"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>`;
+            
+        const showModal = (modalId) => document.getElementById(modalId)?.classList.add('active');
+        const closeModal = (modalId) => document.getElementById(modalId)?.classList.remove('active');
+
+        const showAuthModal = () => {
+            DOMElements.authModal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close-btn" data-modal-id="auth-modal">&times;</span>
+                    <div id="login-form">
+                        <h2>Login</h2>
+                        <form>
+                            <div class="form-group"><label>Email</label><input type="email" id="login-email"></div>
+                            <div class="form-group"><label>Password</label><input type="password" id="login-password"></div>
+                            <button type="submit" class="btn">Login</button>
+                        </form>
+                        <p class="toggle-form" data-form="register">Don't have an account? Register</p>
+                    </div>
+                    <div id="register-form" style="display:none;">
+                        <h2>Register</h2>
+                        <form>
+                            <div class="form-group"><label>Email</label><input type="email" id="register-email"></div>
+                            <div class="form-group"><label>Password</label><input type="password" id="register-password"></div>
+                            <button type="submit" class="btn">Register</button>
+                        </form>
+                        <p class="toggle-form" data-form="login">Already have an account? Login</p>
+                    </div>
+                    <p class="error-message" id="auth-error"></p>
+                </div>`;
+            showModal('auth-modal');
+        };
+        
+        const showMenuModal = () => {
+            const loggedInLinks = `
+                <a href="#profile" class="nav-link" data-page="profile"><i class="fas fa-user"></i> My Profile</a>
+                <a href="#orders" class="nav-link" data-page="orders"><i class="fas fa-receipt"></i> My Orders</a>
+                <button id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>`;
+            const guestLinks = `<button id="login-menu-btn"><i class="fas fa-sign-in-alt"></i> Login</button>`;
+            DOMElements.menuModal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close-btn" data-modal-id="menu-modal">&times;</span>
+                    <div class="menu-list">
+                        ${currentUser ? loggedInLinks : guestLinks}
+                        <a href="#about" class="nav-link" data-page="about"><i class="fas fa-info-circle"></i> About Us</a>
+                        <a href="#contact" class="nav-link" data-page="contact"><i class="fas fa-envelope"></i> Contact Us</a>
+                    </div>
+                </div>`;
+            showModal('menu-modal');
+        };
+
+        const showShippingModal = () => {
+             DOMElements.shippingModal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close-btn" data-modal-id="shipping-modal">&times;</span>
+                    <h2>Buuxi formka adeegaga</h2>
+                    <form id="shipping-form">
+                        <div class="form-group"><label>Full Name</label><input type="text" id="shipping-name" placeholder="Enter your name" required></div>
+                        <div class="form-group"><label>WhatsApp Number</label><input type="tel" id="shipping-whatsapp" placeholder="Numbers only" required></div>
+                        <div class="form-group"><label>Session ID</label><input type="text" id="shipping-session" placeholder="enter session ID" required></div>
+                        <div class="form-group"><label>Gali Number ka aad lacagta kasoo dirte</label><input type="tel" id="shipping-gali" placeholder="Numbers only" required></div>
+                        <div class="form-group"><label>URL</label><input type="url" id="shipping-url" placeholder="screenshot of the payment" required></div>
+                        <button type="submit" class="btn">Place Order</button>
+                    </form>
+                </div>`;
+            showModal('shipping-modal');
+        }
+
+        const setupEventListeners = () => {
+            DOMElements.menuBtn.addEventListener('click', showMenuModal);
+            document.addEventListener('click', e => {
+                if (e.target.matches('.close-btn')) closeModal(e.target.dataset.modalId);
+                if (e.target.matches('.toggle-form')) {
+                    const targetForm = e.target.dataset.form;
+                    document.getElementById('login-form').style.display = targetForm === 'login' ? 'block' : 'none';
+                    document.getElementById('register-form').style.display = targetForm === 'register' ? 'block' : 'none';
+                }
+                if (e.target.id === 'login-menu-btn') { closeModal('menu-modal'); showAuthModal(); }
+                if (e.target.id === 'logout-btn') handleLogout();
+                if (e.target.matches('.menu-list a')) {
+                    closeModal('menu-modal');
+                    const targetHash = e.target.getAttribute('href');
+                    if(location.hash !== targetHash) {
+                       history.pushState(null, '', targetHash);
+                       navigateTo(targetHash);
+                    }
+                }
+                const addToCartBtn = e.target.closest('.add-to-cart-btn');
+                if (addToCartBtn) handleAddToCart(addToCartBtn.dataset.id);
+
+                const removeFromCartBtn = e.target.closest('.remove-from-cart-btn');
+                if(removeFromCartBtn) handleUpdateCartQuantity(removeFromCartBtn.dataset.id, 0);
+
+                const quantityChangeBtn = e.target.closest('.quantity-change-btn');
+                if(quantityChangeBtn) {
+                    const {id, change} = quantityChangeBtn.dataset;
+                    const newQuantity = userCart[id].quantity + parseInt(change);
+                    handleUpdateCartQuantity(id, newQuantity);
+                }
+                if(e.target.id === 'checkout-btn') {
+                    if(!currentUser) { showAuthModal(); return; }
+                    showShippingModal();
+                }
+            });
+
+            document.addEventListener('submit', async e => {
+                e.preventDefault();
+                const errorEl = document.getElementById('auth-error');
+
+                if (e.target.closest('#login-form')) {
+                    try {
+                        const email = document.getElementById('login-email').value;
+                        const password = document.getElementById('login-password').value;
+                        await signInWithEmailAndPassword(auth, email, password);
+                        closeModal('auth-modal');
+                    } catch (error) {
+                        errorEl.textContent = error.message;
+                        errorEl.style.display = 'block';
+                    }
+                }
+                if (e.target.closest('#register-form')) {
+                    try {
+                        const email = document.getElementById('register-email').value;
+                        const password = document.getElementById('register-password').value;
+                        await createUserWithEmailAndPassword(auth, email, password);
+                        closeModal('auth-modal');
+                    } catch (error) {
+                        errorEl.textContent = error.message;
+                        errorEl.style.display = 'block';
+                    }
+                }
+                if(e.target.id === 'shipping-form') handlePlaceOrder(e.target);
+                if(e.target.id === 'contact-form') handleContactSubmit(e.target);
+            });
+            
+            DOMElements.appContainer.addEventListener('input', e => {
+                if (e.target.id === 'search-input') {
+                    const query = e.target.value.toLowerCase();
+                    const filtered = allProducts.filter(p => p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query));
+                    document.getElementById('search-results').innerHTML = filtered.map(createProductCard).join('');
+                }
+            });
+             DOMElements.appContainer.addEventListener('click', e => {
+                if(e.target.classList.contains('category-bubble')) {
+                    document.querySelectorAll('.category-bubble').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    const category = e.target.dataset.category;
+                    const filtered = category === 'all' ? allProducts : allProducts.filter(p => p.category === category);
+                    document.querySelector('#home .product-grid').innerHTML = filtered.map(createProductCard).join('');
+                }
+             });
+        };
+
+        const handleAddToCart = (productId) => {
+            if (!currentUser) { showAuthModal(); return; }
+            const product = allProducts.find(p => p.id === productId);
+            const currentQuantity = userCart[productId] ? userCart[productId].quantity : 0;
+            const itemData = { ...product, quantity: currentQuantity + 1 };
+            set(ref(db, `users/${currentUser.uid}/cart/${productId}`), itemData);
+        };
+        
+        const handleUpdateCartQuantity = (productId, newQuantity) => {
+            if (!currentUser) return;
+            const itemRef = ref(db, `users/${currentUser.uid}/cart/${productId}`);
+            if (newQuantity <= 0) {
+                remove(itemRef);
+            } else {
+                update(itemRef, { quantity: newQuantity });
+            }
+        };
+
+        const handlePlaceOrder = async (form) => {
+            if(!currentUser) return;
+            const totalAmount = Object.values(userCart).reduce((sum, item) => sum + item.price * item.quantity, 0);
+            const newOrderRef = push(ref(db, `orders/${currentUser.uid}`));
+            const orderData = {
+                orderId: newOrderRef.key,
+                date: Date.now(),
+                userEmail: currentUser.email,
+                items: Object.values(userCart),
+                totalAmount: totalAmount,
+                status: "Pending",
+                shippingName: form.querySelector('#shipping-name').value,
+                whatsappNumber: form.querySelector('#shipping-whatsapp').value,
+                sessionId: form.querySelector('#shipping-session').value,
+                galiNumber: form.querySelector('#shipping-gali').value,
+                paymentScreenshotUrl: form.querySelector('#shipping-url').value,
+                shippingForm: "Buuxi formka adeegaga"
+            };
+            await set(newOrderRef, orderData);
+            await remove(ref(db, `users/${currentUser.uid}/cart`));
+            closeModal('shipping-modal');
+            alert('Order placed successfully!');
+            navigateTo('#orders');
+        };
+
+        const handleContactSubmit = async (form) => {
+            const messageData = {
+                name: form.querySelector('#contact-name').value,
+                email: form.querySelector('#contact-email').value,
+                message: form.querySelector('#contact-message').value,
+                date: Date.now(),
+            };
+            await push(ref(db, 'messages'), messageData);
+            alert('Your message has been sent!');
+            form.reset();
+            navigateTo('#home');
+        };
+
+        const initialize = () => {
+            onValue(ref(db, 'products'), (snap) => {
+                const data = snap.val();
+                allProducts = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
+                navigateTo(location.hash || '#home');
+            });
+            
+            setupRouting();
+            setupEventListeners();
+            navigateTo(location.hash || '#home');
+        };
+
+        initialize();
+    </script>
+</body>
+</html>
